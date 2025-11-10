@@ -6,11 +6,13 @@ import requests
 from dotenv import load_dotenv
 from discord.ext import commands
 
-from database import add_player
+from modules.database import add_player
+from modules.show import command_info, Commands
 
 load_dotenv()
 
 DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
+CHANNEL_ID = os.environ['DISCORD_CHANNEL_ID']
 RIOT_TOKEN = os.environ['RIOT_TOKEN']
 RIOT_ROOT = os.environ['RIOT_URL_ROOT']
 
@@ -56,6 +58,21 @@ async def joinParty(ctx, *, message):
     except Exception as e:
         await ctx.channel.send("I wasn't built right...")
         raise e
-        
+
+
+@bot.command()
+async def show(ctx, *, message):
+    command = command_info(message)
+    message_content = (
+        f"**{'Not found' if command.value == "" else command.value}**\n"
+        f"**Description:** {command.description}\n"
+        f"**How to use:** {command.instructions}"
+    )
+    await ctx.channel.send(message_content)
+
+@bot.command()
+async def listCommands(ctx):
+    message_content = "\n".join([f"**{command.value}:** {command.description}" for command in filter(lambda x : x.value!="",Commands)])
+    await ctx.channel.send(message_content)
 
 bot.run(DISCORD_TOKEN, log_handler=handler, log_level=logging.DEBUG)
