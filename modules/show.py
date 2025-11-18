@@ -9,7 +9,11 @@ class Commands(str, Enum):
         obj.instructions = instructions
         return obj
     
+    LISTCOMMANDS = ("listCommands","Shows the list of the available commands and their description","!listCommands")
+    SHOW = ('show','Shows the description and the instructions for the referenced command.', '!show <command>')
     JOINPARTY = ("joinParty","Adds the summoner data to the database.", "!joinParty <summonerName>#<tagLine>")
+    SHOWPLAYER = ("showPlayer", "Shows the queue data of the specified player.","!showPlayer <summonerName>#<tagLine>")
+    DELETELAYER = ("deletePlayer", "Deletes the player from the database.","!deletePlayer <summonerName>#<tagLine>")
     NOTFOUND = ("","It doesn't exist.","Not much to show about that.")
 
 def command_info(command):
