@@ -25,7 +25,7 @@ intents.message_content =True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-@tasks.loop(minutes=5)
+@tasks.loop(hours=6)
 async def query_advance():
     channel = bot.get_channel(int(DISCORD_CHANNEL_ID))
     if channel:
@@ -110,7 +110,7 @@ async def showPlayer(ctx, *, message):
         playerName, tagLine = message.split('#')
         try:
             player = show_player(playerName, tagLine, RIOT_TOKEN)
-            ctx.channel.send(
+            await ctx.channel.send(
                 f'**{playerName}#{tagLine}** \n'
                 f'Flex: **{player[0]} {player[1]}** ({player[2]}LP)\n'
                 f'Solo: **{player[3]} {player[4]}** ({player[5]}LP)'
@@ -118,7 +118,7 @@ async def showPlayer(ctx, *, message):
         except Exception as error:
             await ctx.channel.send(str(error))
     except:
-        ctx.channel.send('Something is wrong with that player name.')
+        await ctx.channel.send('Something is wrong with that player name.')
 
 
 @bot.command()
@@ -128,7 +128,7 @@ async def deletePlayer(ctx, *, message):
         try:
             deleted = delete_player(playerName, tagLine, RIOT_TOKEN)
             if deleted:
-                ctx.channel.send(f'Sad to see you go {playerName}.\n You can always come back using the _joinParty_ command!')
+                await ctx.channel.send(f'Sad to see you go {playerName}.\n You can always come back using the _joinParty_ command!')
         except Exception as e:
             raise e
     except (ValueError, IndexError):
