@@ -15,7 +15,6 @@ load_dotenv()
 
 DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 DISCORD_CHANNEL_ID = os.environ['DISCORD_CHANNEL_ID']
-CHANNEL_ID = os.environ['DISCORD_CHANNEL_ID']
 RIOT_TOKEN = os.environ['RIOT_TOKEN']
 
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
