@@ -1,0 +1,41 @@
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    container_name: discord-bot
+
+    env_file:
+      - .env
+    
+    depends_on:
+      - db
+    
+    networks:
+      - bot-network
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    container_name: bot-db
+
+    env_file:
+      - .env
+    
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    
+    networks:
+      - bot-network
+
+volumes:
+  postgres_data:
+
+networks:
+  bot-network:
+    name: dicord-bot-net
+    driver: bridge
