@@ -2,7 +2,6 @@ import os
 import asyncio
 import discord
 import logging
-import datetime
 import requests
 
 from dotenv import load_dotenv
@@ -134,6 +133,5 @@ async def deletePlayer(ctx, *, message):
         ctx.channel.send('Something is wrong with that player name')
     except Exception as e:
         raise e
-
 
 bot.run(DISCORD_TOKEN, log_handler=handler, log_level=logging.DEBUG)
