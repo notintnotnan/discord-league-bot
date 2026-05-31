@@ -1,12 +1,12 @@
 import os
 import asyncio
 import discord
-import logging
 import requests
 
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
 
+from logs import logger
 from modules.database import add_player, delete_player, update_queues, get_message, show_player, UniqueViolation
 from modules.show import command_info, Commands
 
@@ -16,14 +16,12 @@ DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 DISCORD_CHANNEL_ID = os.environ['DISCORD_CHANNEL_ID']
 RIOT_TOKEN = os.environ['RIOT_TOKEN']
 
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-
 intents = discord.Intents.default()
 intents.message_content =True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-@tasks.loop(hours=6)
+@tasks.loop(hours=4)
 async def query_advance():
     channel = bot.get_channel(int(DISCORD_CHANNEL_ID))
     if channel:
@@ -39,7 +37,7 @@ async def query_advance():
 
 @bot.event
 async def on_ready():
-    print(f"{bot.user.name} has come from the Summoner's Rift.")
+    logger.info(f"{bot.user.name} has come from the Summoner's Rift.")
     if not query_advance.is_running():
         query_advance.start()
 
@@ -49,6 +47,7 @@ async def lolBotStatus(ctx):
 
 @bot.command()
 async def joinParty(ctx, *, message):
+    logger.info(f'Adding {message} to the database.')
     gameName = message.split("#")[0]
     tagLine = message.split("#")[1]
 
@@ -78,14 +77,17 @@ async def joinParty(ctx, *, message):
 
     try:
         if response.status_code == requests.codes.ok:
+            logger.info(f"Added {gameName} to the database.")
             await ctx.channel.send(f"{player_info['gameName']} #{player_info['tagLine']} added to the party!")
         else:
             await ctx.channel.send("Something went wrong with Rito. :(")
+            logger.error(f'Error with the Riot API: {response.status_code}')
     except UniqueViolation as e:
-        await ctx.channel.send(str(e))
+        logger.error(f'{message} already in the server.')
+        await ctx.channel.send(f"It seems {gameName} is already at the party.")
     except Exception as e:
+        logger.error(f"Unknown issue: {e.__class__}")
         await ctx.channel.send("I wasn't built right...")
-        raise e
 
 @bot.command()
 async def show(ctx, *, message):
@@ -114,24 +116,24 @@ async def showPlayer(ctx, *, message):
                 f'Solo: **{player[3]} {player[4]}** ({player[5]}LP)'
             )
         except Exception as error:
-            await ctx.channel.send(str(error))
+            logger.error(f"Error pulling data from the database: {error.__class__}")
+            await ctx.channel.send("Couldn't get the player data, has it been registered?")
     except:
+        logger.error(f"Error parsing the player name from the message: {message}")
         await ctx.channel.send('Something is wrong with that player name.')
-
 
 @bot.command()
 async def deletePlayer(ctx, *, message):
     try:
         playerName, tagLine = message.split('#')
-        try:
-            deleted = delete_player(playerName, tagLine, RIOT_TOKEN)
-            if deleted:
-                await ctx.channel.send(f'Sad to see you go {playerName}.\n You can always come back using the _joinParty_ command!')
-        except Exception as e:
-            raise e
+        deleted = delete_player(playerName, tagLine, RIOT_TOKEN)
+        if deleted:
+            logger.info(f"{playerName} deleted from database.")
+            await ctx.channel.send(f'Sad to see you go {playerName}.\n You can always come back using the _joinParty_ command!')
     except (ValueError, IndexError):
         ctx.channel.send('Something is wrong with that player name')
     except Exception as e:
-        raise e
+        logger.error(f"Error deleting {playerName} from database: {e.__class__}")
+        await ctx.channel.send("There was an error deleting the player, please try later.")
 
-bot.run(DISCORD_TOKEN, log_handler=handler, log_level=logging.DEBUG)
+bot.run(DISCORD_TOKEN)

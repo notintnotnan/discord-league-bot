@@ -4,6 +4,7 @@ import datetime
 import requests
 
 from psycopg2.errors import UniqueViolation, DataError
+
 from modules.rank import Rank
 
 def translate_rank(rank):
@@ -24,12 +25,11 @@ def add_player(puuid, flex_division, flex_rank, flex_points, solo_division, solo
             user=os.environ['DATABASE_USER'],
             password=os.environ['DATABASE_PASSWORD'],
             host=os.environ['DATABASE_HOST'],
-            port=os.environ['DATABASE_PORT'],
-            sslmode='require'
+            port=os.environ['DATABASE_PORT']
         )
         cur = conn.cursor()
-    except:
-        raise psycopg2.DatabaseError
+    except Exception as e:
+        raise psycopg2.DatabaseError(f"Could not connect to the database: {e.__class__}")
 
     try:
         query = '''
@@ -74,14 +74,11 @@ def add_player(puuid, flex_division, flex_rank, flex_points, solo_division, solo
         cur.close()
         conn.close()
     except psycopg2.errors.UniqueViolation:
-        UniqueViolation("That player is already registered.")
-    
-    except:
         if cur:
             cur.close()
         if conn:
             conn.close()
-        raise psycopg2.DatabaseError
+        raise UniqueViolation("That player is already registered.")
     
 def show_player(playerName, tagLine, riot_token):
     try:
@@ -90,12 +87,11 @@ def show_player(playerName, tagLine, riot_token):
             user=os.environ['DATABASE_USER'],
             password=os.environ['DATABASE_PASSWORD'],
             host=os.environ['DATABASE_HOST'],
-            port=os.environ['DATABASE_PORT'],
-            sslmode='require'
+            port=os.environ['DATABASE_PORT']
         )
         cur = conn.cursor()
-    except:
-        raise ConnectionError("Unable to connect with the database.")
+    except Exception as e:
+        raise psycopg2.DatabaseError(f"Could not connect to the database: {e.__class__}")
     
     try:
         headers = {
@@ -160,16 +156,15 @@ def delete_player(playerName, tagLine, riot_token):
             user=os.environ['DATABASE_USER'],
             password=os.environ['DATABASE_PASSWORD'],
             host=os.environ['DATABASE_HOST'],
-            port=os.environ['DATABASE_PORT'],
-            sslmode='require'
+            port=os.environ['DATABASE_PORT']
         )
         cur = conn.cursor()
-    except:
+    except Exception as e:
         if cur:
             cur.close()
         if conn:
             conn.close()
-        raise psycopg2.DatabaseError
+        raise psycopg2.DatabaseError(f"Could not connect to the database: {e.__class__}")
     
     try:
         headers = {
@@ -205,24 +200,23 @@ def update_queues(riot_token):
             user=os.environ['DATABASE_USER'],
             password=os.environ['DATABASE_PASSWORD'],
             host=os.environ['DATABASE_HOST'],
-            port=os.environ['DATABASE_PORT'],
-            sslmode='require'
+            port=os.environ['DATABASE_PORT']
         )
         cur = conn.cursor()
-    except:
+    except Exception as e:
         if cur:
             cur.close()
         if conn:
             conn.close()
-        raise psycopg2.DatabaseError
+        raise psycopg2.DatabaseError(f"Could not connect to the database: {e.__class__}")
     
     try:
         cur.execute('SELECT * FROM DISCORD_BOT_LEAGUE WHERE DELETED_AT IS NULL')
         players = cur.fetchall()
-    except:
+    except Exception as e:
         cur.close()
         conn.close()
-        raise psycopg2.DatabaseError
+        raise psycopg2.DatabaseError(f"Could not connect to the database: {e.__class__}")
     
     for player in players:
         headers = {
@@ -292,12 +286,11 @@ def get_message(sentiment):
             user=os.environ['DATABASE_USER'],
             password=os.environ['DATABASE_PASSWORD'],
             host=os.environ['DATABASE_HOST'],
-            port=os.environ['DATABASE_PORT'],
-            sslmode='require'
+            port=os.environ['DATABASE_PORT']
         )
         cur = conn.cursor()
-    except:
-        raise psycopg2.DatabaseError
+    except Exception as e:
+        raise psycopg2.DatabaseError(f"Could not connect to the database: {e.__class__}")
     
     try:
         cur.execute('''
