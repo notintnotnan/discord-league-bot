@@ -38,5 +38,5 @@ volumes:
 
 networks:
   bot-network:
-    name: dicord-bot-net
+    name: discord-bot-net
     driver: bridge
