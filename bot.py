@@ -26,6 +26,7 @@ async def query_advance():
     channel = bot.get_channel(int(DISCORD_CHANNEL_ID))
     if channel:
         updates = update_queues(RIOT_TOKEN)
+        logger.info("Updating database registry.")
         if updates and len(updates)>0:
             for update in updates:
                 message_content = (
