@@ -5,6 +5,7 @@ import requests
 
 from psycopg2.errors import UniqueViolation, DataError
 
+from logs import logger
 from modules.rank import Rank
 
 def translate_rank(rank):
@@ -114,15 +115,18 @@ def show_player(playerName, tagLine, riot_token):
         ''', (puuid,))
 
         return cur.fetchall()[0]
-    except ConnectionError:
+    except ConnectionError as exc:
+        logger.error(f"Database function show_player {exc.__class__}: {str(exc)}")
         raise ConnectionError("Could not connect to the database.")
-    except (KeyError,ValueError):
+    except (KeyError,ValueError) as exc:
+        logger.error(f"Database function show_player {exc.__class__}: {str(exc)}")
         raise KeyError("There was an error creating the response.")
-    except IndexError:
+    except IndexError as exc:
+        logger.error(f"Database function show_player {exc.__class__}: {str(exc)}")
         raise IndexError("There's no player registred with that name.")
-    except Exception:
+    except Exception as exc:
+        logger.error(f"Database function show_player {exc.__class__}: {str(exc)}")
         raise DataError("There was an error with the database.")
-
     
 def update_player(connection, cursor, player):
     cursor.execute('''
@@ -159,12 +163,13 @@ def delete_player(playerName, tagLine, riot_token):
             port=os.environ['DATABASE_PORT']
         )
         cur = conn.cursor()
-    except Exception as e:
+    except Exception as exc:
         if cur:
             cur.close()
         if conn:
             conn.close()
-        raise psycopg2.DatabaseError(f"Could not connect to the database: {e.__class__}")
+        logger.error(f"Database funtion delete_player {exc.__clas__}: {str(exc)}")
+        raise psycopg2.DatabaseError(f"Could not connect to the database: {exc.__class__}")
     
     try:
         headers = {
@@ -186,8 +191,11 @@ def delete_player(playerName, tagLine, riot_token):
         return True
 
     except:
-        cur.close()
-        conn.close()
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+        logger.error(f"Database funtion delete_player {exc.__clas__}: {str(exc)}")
         return False
 
 def update_queues(riot_token):
@@ -274,7 +282,10 @@ def update_queues(riot_token):
 
         except Exception as e:
             cur.close()
-            conn.close()
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
             continue
     
     return updates
@@ -303,4 +314,8 @@ def get_message(sentiment):
         phrase = cur.fetchall()[0]
         return phrase[0].strip().replace("\\","").replace('"',"")
     except:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
         return "Wish I had words to describe the event!"
